@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+ Branchway NTFS FSKit module. Modelled on Apple's own
+ /System/Library/ExtensionKit/Extensions/com.apple.fskit.exfat.appex/Contents/Info.plist (macOS 27.0)
+ and docs/NTFS_PLAN.md §1.2 (in the Branchway repo).
+
+ FSProbeOrder: lower is probed first. Apple's read-only /System/Library/Filesystems/ntfs.fs uses
+ 1000 (Windows_NTFS), 2000 (GPT basic data), 4000 (partitionless); Apple's exFAT module uses 2000 /
+ 2000 / 4000 for the same keys. We take 900 / 1900 / 3900, exactly one step ahead of each Apple
+ entry, as NTFSKit does: ahead of ntfs.fs so NTFS goes to us, but not so far ahead (ttntfs uses 500)
+ that we jump unrelated probers. Our probe answers .notRecognized for anything that is not NTFS
+ (exFAT/FAT on the same GPT type included), so going first never steals another file system.
+ UNVERIFIED until ADP: how Disk Arbitration arbitrates a user FSKit module against ntfs.fs.
+
+ FSCheckOptionSyntax: Disk Arbitration passes -q (quick) and -y (repair); -n (check, no repair) is
+ accepted too, as Apple's exFAT does ("dnqS:y").
+-->
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>Branchway NTFS</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright 2026 Evenpine. GPL-2.0. Uses libntfs-3g (GPL-2.0-or-later).</string>
+	<!-- the app group the module reads the per-volume policy from (expanded at build time) -->
+	<key>BWAppGroup</key>
+	<string>$(BW_APP_GROUP)</string>
+	<key>EXAppExtensionAttributes</key>
+	<dict>
+		<key>EXExtensionPointIdentifier</key>
+		<string>com.apple.fskit.fsmodule</string>
+		<key>FSShortName</key>
+		<string>branchwayntfs</string>
+		<key>FSSupportsBlockResources</key>
+		<true/>
+		<key>FSSupportsKernelOffloadedIO</key>
+		<true/>
+		<key>FSSupportsServerURLs</key>
+		<false/>
+		<key>FSCheckOptionSyntax</key>
+		<dict>
+			<key>shortOptions</key>
+			<string>nqy</string>
+		</dict>
+		<key>FSMediaTypes</key>
+		<dict>
+			<key>Windows_NTFS</key>
+			<dict>
+				<key>FSMediaProperties</key>
+				<dict>
+					<key>Content Hint</key>
+					<string>Windows_NTFS</string>
+					<key>Leaf</key>
+					<true/>
+				</dict>
+				<key>FSProbeOrder</key>
+				<integer>900</integer>
+			</dict>
+			<key>EBD0A0A2-B9E5-4433-87C0-68B6B72699C7</key>
+			<dict>
+				<key>FSMediaProperties</key>
+				<dict>
+					<key>Content Hint</key>
+					<string>EBD0A0A2-B9E5-4433-87C0-68B6B72699C7</string>
+					<key>Leaf</key>
+					<true/>
+				</dict>
+				<key>FSProbeOrder</key>
+				<integer>1900</integer>
+			</dict>
+			<key>Partitionless</key>
+			<dict>
+				<key>FSMediaProperties</key>
+				<dict>
+					<key>Leaf</key>
+					<true/>
+					<key>Whole</key>
+					<true/>
+				</dict>
+				<key>FSProbeOrder</key>
+				<integer>3900</integer>
+			</dict>
+		</dict>
+		<key>FSPersonalities</key>
+		<dict>
+			<key>NTFS</key>
+			<dict>
+				<key>FSName</key>
+				<string>Windows NT File System (Branchway)</string>
+			</dict>
+		</dict>
+	</dict>
+</dict>
+</plist>

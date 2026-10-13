@@ -1,0 +1,23 @@
+Branchway NTFS
+Copyright (C) 2026 Evenpine
+Licensed under the GNU General Public License, version 2 (see LICENSE).
+
+This product includes third-party software:
+
+libntfs-3g and ntfsprogs (mkntfs)
+  Licence:  GNU General Public License, version 2 or (at your option) any later version
+            (GPL-2.0-or-later), per the upstream README "LICENSES" section and the file headers.
+  Version:  2026.9.28 (tag 2026.9.28, commit 7f0f841fc52cf719106c5c93bafe465004e36816, 2026-09-28)
+  Source:   https://github.com/tuxera/ntfs-3g  (git tag 2026.9.28)
+  Upstream: Tuxera Inc. and the NTFS-3G contributors, https://github.com/tuxera/ntfs-3g/blob/edge/AUTHORS
+  Changes:  none. The library is built unmodified (see patches/README.md).
+  Build:    Scripts/build-libntfs-3g.sh SRC BUILD PREFIX (or `make libntfs`):
+            ./autogen.sh; configure --disable-ntfs-3g --enable-ntfsprogs --disable-shared
+            --enable-static --disable-crypto; make; make install.
+            The FUSE driver and fuse-lite (LGPL-2.0) are not built and not shipped.
+  Linked:   statically, into the FSKit module and the command-line tools of this repository.
+  Note:     libntfs-3g/realpath.c says it "Originated from the util-linux project" and carries no
+            licence header of its own; it is covered by the package licence above.
+
+The spike also used the Homebrew build of ntfs-3g-mac 2022.10.3 (gromgit/fuse) for comparison runs only.
+It is not linked into, or shipped with, any build of this product.

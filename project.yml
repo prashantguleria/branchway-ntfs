@@ -1,0 +1,100 @@
+# Branchway NTFS: XcodeGen project (xcodegen generate -> BranchwayNTFS.xcodeproj, not committed).
+#
+#   make libntfs && make engine          # build/libntfs-3g (static) + build/libbwntfs.a (engine)
+#   xcodegen generate
+#   xcodebuild -scheme BranchwayNTFS CODE_SIGNING_ALLOWED=NO build
+#   xcodebuild -scheme BranchwayNTFS CODE_SIGNING_ALLOWED=NO test     # module tests on images
+#
+# Loading the module needs the com.apple.developer.fskit.fsmodule entitlement from a paid Apple
+# Developer Program profile (enrolment pending 2026-10-12). Unsigned builds compile and test; they
+# never load in fskitd. See README.md and docs/NTFS_2_HANDOFF.md.
+name: BranchwayNTFS
+options:
+  bundleIdPrefix: com.evenpine
+  deploymentTarget:
+    macOS: "15.4"
+  createIntermediateGroups: true
+  generateEmptyDirectories: false
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    ARCHS: arm64
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_HARDENED_RUNTIME: YES
+    DEAD_CODE_STRIPPING: YES
+    # engine C API as a Clang module (Engine/include/module.modulemap)
+    SWIFT_INCLUDE_PATHS: $(PROJECT_DIR)/Engine/include
+    ENGINE_LDFLAGS: $(PROJECT_DIR)/build/libbwntfs.a $(PROJECT_DIR)/build/libntfs-3g/lib/libntfs-3g.a -lz -framework CoreFoundation
+targets:
+  BranchwayNTFS:
+    type: application
+    platform: macOS
+    sources:
+      - path: Host
+    dependencies:
+      - target: BranchwayNTFSModule
+        embed: true
+    settings:
+      base:
+        PRODUCT_NAME: Branchway NTFS
+        PRODUCT_BUNDLE_IDENTIFIER: com.evenpine.branchwayntfs
+        PRODUCT_MODULE_NAME: BranchwayNTFS
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Branchway NTFS
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        INFOPLIST_KEY_NSHumanReadableCopyright: "Copyright 2026 Evenpine. GPL-2.0."
+        CODE_SIGN_ENTITLEMENTS: Host/BranchwayNTFS.entitlements
+  BranchwayNTFSModule:
+    type: extensionkit-extension
+    platform: macOS
+    sources:
+      - path: Module
+        excludes: ["*.md"]
+    preBuildScripts:
+      - name: Build the engine (make engine)
+        script: |
+          set -e
+          cd "$PROJECT_DIR"
+          test -f build/libntfs-3g/lib/libntfs-3g.a || { echo "error: run 'make libntfs' first (static libntfs-3g, never committed)"; exit 1; }
+          /usr/bin/make engine
+        basedOnDependencyAnalysis: false
+    settings:
+      base:
+        PRODUCT_NAME: BranchwayNTFSModule
+        PRODUCT_BUNDLE_IDENTIFIER: com.evenpine.branchwayntfs.module
+        INFOPLIST_FILE: Module/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: Module/BranchwayNTFSModule.entitlements
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        OTHER_LDFLAGS: $(ENGINE_LDFLAGS)
+        BW_APP_GROUP: $(TeamIdentifierPrefix)com.evenpine.drives
+  BranchwayNTFSModuleTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/module
+      - path: Module/Core
+    dependencies:
+      - target: BranchwayNTFS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.evenpine.branchwayntfs.moduletests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Branchway NTFS.app/Contents/MacOS/Branchway NTFS
+        BUNDLE_LOADER: $(TEST_HOST)
+        OTHER_LDFLAGS: $(ENGINE_LDFLAGS)
+schemes:
+  BranchwayNTFS:
+    build:
+      targets:
+        BranchwayNTFS: all
+        BranchwayNTFSModule: all
+    test:
+      targets:
+        - BranchwayNTFSModuleTests
+      environmentVariables:
+        # made by Scripts/module_test_fixture.sh (a fresh journaled NTFS image)
+        BWNTFS_TEST_IMAGE: /Volumes/Media/spikes/ntfs/s6work/ntfs2/module/fixture.img
+        BWNTFS_TEST_DIR: /Volumes/Media/spikes/ntfs/s6work/ntfs2/module

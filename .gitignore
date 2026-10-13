@@ -1,0 +1,7 @@
+build/
+*.img
+*.wlog
+__pycache__/
+*.pyc
+DerivedData/
+*.xcodeproj/

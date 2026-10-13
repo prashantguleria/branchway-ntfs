@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- restricted, profile-bound: fskitd loads no module without it (paid ADP team; pending) -->
+	<key>com.apple.developer.fskit.fsmodule</key>
+	<true/>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<!-- per-volume Read Only / Read & Write policy written by Branchway, read here -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>$(TeamIdentifierPrefix)com.evenpine.drives</string>
+	</array>
+</dict>
+</plist>

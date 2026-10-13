@@ -1,0 +1,5 @@
+// The engine API for Swift (Module/, Tests/module/). Only bwntfs.h is public; nhcore.h is the CLI's.
+module BWNTFSEngine {
+    header "bwntfs.h"
+    export *
+}
